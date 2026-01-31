@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Jens Haugaard is a Copenhagen-based photographer and multidisciplinary creative exploring visual mediums.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Jens Haugaard — Photographer & Creative">
+  <meta property="og:description" content="Photography, campaigns, and visual storytelling by Copenhagen-based creative Jens Haugaard.">
+  <meta property="og:url" content="https://www.jenshaugaard.com/">
+  <meta property="og:image" content="https://www.jenshaugaard.com/og.jpg">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="canonical" href="https://www.jenshaugaard.com/">
+  <title>Jens Haugaard Photographer / Creative</title>
+  <link rel="icon" type="image/x-icon" href="/FAVICON_2.png">
+  <link rel="stylesheet" href="https://use.typekit.net/qyf2jna.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fragment+Mono:ital@0;1&display=swap" rel="stylesheet">
+  <?xml version="1.0" encoding="UTF-8"?>
+
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1CNJGBWHP1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-1CNJGBWHP1');
+</script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+
+  <style>
+    :root{
+  --thumb-scale: .58;    
+  --thumb-w-base: 70px;
+  --thumb-w-sm-base: 56px;
+
+  --thumb-w: calc(var(--thumb-w-base) * var(--thumb-scale));
+  --thumb-w-sm: calc(var(--thumb-w-sm-base) * var(--thumb-scale));
+
+  --hero-h: 70svh;
+  --speed: 0.035;
+  --gap: 0;
+
+  --overlay-font: "fragment mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+
+}
+
+
+    html, body{
+      margin:0; padding:0; height:100svh; overflow:hidden;
+      background:#fff; color:#000;
+      font-family:"neue-haas-grotesk-display", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      user-select:none; -webkit-user-select:none; -ms-user-select:none;
+    }
+
+    /* HERO (big image behind the strip) */
+    .hero-wrap{ position:fixed; inset:0; display:grid; place-items:center; z-index:1; pointer-events:none; }
+    .hero-layer{
+      max-height:var(--hero-h); max-width:100%;
+      width:auto; height:auto; object-fit:contain;
+      position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%); opacity:0; will-change:opacity; contain:paint;
+    }
+    .hero-layer.show{ opacity:1; transform:translate(-50%,-50%) translateZ(0); }
+
+ .rail-wrap{
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+
+  will-change: transform;
+}
+
+
+/* Avoid subpixel flicker during transform */
+.rail{ transform: translateZ(0); }
+.track{ backface-visibility: hidden; transform: translate3d(0,0,0); }
+    .rail-wrap.fast{ transition-duration:.3s; }
+    .rail{ position:relative; display:flex; align-items:center; gap:var(--gap); width:100vw; overflow:hidden; cursor:grab; touch-action:none; }
+    body.dragging, .rail.dragging{ cursor:grabbing; }
+
+    *{ -webkit-tap-highlight-color:transparent; }
+    img, .thumb{ -webkit-user-drag:none; user-drag:none; -webkit-touch-callout:none; }
+
+    .track{ display:flex; gap:0; will-change:transform; transform:translateZ(0); backface-visibility:hidden; }
+    .set{ display:flex; gap:0; }
+
+    .thumb{
+      flex:0 0 auto; width:var(--thumb-w); aspect-ratio:4/5;
+      position:relative; overflow:hidden; border:0; margin:0; padding:0; background:#000;
+    }
+    .thumb img{ width:100%; height:100%; object-fit:cover; display:block; backface-visibility:hidden; transform:translateZ(0); }
+
+
+    .sr-only{
+  position:absolute;
+  width:1px;
+  height:1px;
+  overflow:hidden;
+  clip:rect(0,0,0,0);
+}
+
+
+.caption{
+  position: fixed;
+  inset: auto 14px 72px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  font-size: 12px;
+  letter-spacing: .01em;
+  z-index: 6;
+  user-select: none;
+  pointer-events: none;
+}
+
+.caption-count{
+  text-align: left;
+  white-space: nowrap;
+}
+
+.caption-title{
+  text-align: right;
+  white-space: nowrap;
+}
+
+
+    @media (max-width:800px){
+      :root{ --thumb-w:var(--thumb-w-sm); --hero-h:80svh; --thumb-scale: .75; }
+      .caption{ font-size:11px; inset: auto 10px 68px 10px; }
+      .hero-layer{ width:100%; width: 95svw; max-width:100%; max-height:70svh; }
+      .rail-wrap{ bottom: 8px !important;}
+    }
+
+    /* ===== Overlay / Menu / Preloader ===== */
+    #menuToggle{
+      position:absolute; top:18px; left:18px; width:20px; height:20px;
+      z-index:110 !important; cursor:pointer; mix-blend-mode:difference;
+      -webkit-user-drag:none; user-select:none; touch-action:manipulation;
+      transition:transform .4s cubic-bezier(.37,.01,.65,.99);
+      display:block; pointer-events:auto;
+    }
+    #menuToggle::before{
+      content:""; position:absolute; top:-24px; right:-24px; bottom:-24px; left:-24px;
+      background:linear-gradient(transparent,transparent); pointer-events:auto;
+    }
+    #menuToggle.rotated{ transform:rotate(45deg); }
+
+    /* Optional separate hit-area (kept for robustness across browsers) */
+    #menuHit{
+      position:absolute; top:24px; left:24px; width:56px; height:56px;
+      transform:translate(-18px,-18px); background:transparent; border:0; padding:0; margin:0;
+      cursor:pointer; z-index:111 !important; -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+    }
+
+      @media (min-width:800px){
+ @keyframes menuToggleWiggle{
+  0%   { transform: rotate(0deg); }
+  33%  { transform: rotate(5deg); }
+  66%  { transform: rotate(-5deg); }
+  100% { transform: rotate(0deg); }
+}
+/* Wiggle class (only when menu is NOT open) */
+#menuToggle.wiggle:not(.rotated){
+  animation: menuToggleWiggle 220ms ease-out;
+}
+      }
+
+
+
+
+/* keep your open state */
+#menuToggle.rotated{
+  transform: rotate(45deg);
+  animation: none;
+}
+
+
+
+
+/* Static logo (top right) */
+#logoStatic{
+  position:absolute;
+  top:18px;
+  right:18px;
+  width: 45px;
+  height:20px;
+
+  z-index:110 !important;
+
+  mix-blend-mode:difference;
+
+  user-select:none;
+  -webkit-user-drag:none;
+
+  display:block;
+}
+
+
+
+
+
+
+@media (max-width:800px){
+  #logoStatic{
+    top:18px;
+  right:16px;
+  
+  }
+   #menuToggle{
+ top:18px;
+  left:16px;
+   }
+#menuLabel{
+     top: 21px;                /* align with your icon */
+  left: 16px;
+  }
+#bottomLine{
+display: none !important;
+}
+
+
+  }
+
+  
+
+#bottomLine{
+  position: fixed;
+  left: 50%;
+  bottom: -2px;
+  transform: translateX(-50%);
+
+  width: 2px;     /* adjust */
+  height: 20px;
+
+  background: #a0a0a0; /* ✅ CHANGE COLOR HERE */
+
+  -webkit-mask: url("/LINE.svg") no-repeat center / contain;
+          mask: url("/LINE.svg") no-repeat center / contain;
+
+  z-index: 2;     /* TEMP: make it impossible to hide */
+  pointer-events: none;
+}
+
+
+
+
+
+
+
+
+
+#overlay{
+  position:fixed;
+  inset:0;
+  height:100svh;
+  background:rgba(0,0,0, 0.93);
+  backdrop-filter: blur(8px);
+  z-index:99;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .4s ease;
+}
+
+#overlay{
+  font-family: var(--overlay-font);
+  font-size: 14px;
+  letter-spacing: -0.05em; /* -5% */
+  font-weight: 400;
+  color: #fff;
+}
+
+/* subtle stroke */
+#overlay *{
+  -webkit-text-stroke: 0.2px rgb(255, 255, 255);
+  text-rendering: geometricPrecision;
+}
+
+
+#overlay.active{ opacity:1; pointer-events:all; }
+
+.overlay-grid{
+  position:absolute;
+  inset:0;
+  padding: 28px;
+  display:grid;
+  grid-template-columns: .5fr 1fr 3fr;
+  column-gap: 24px;
+  align-items:center;
+}
+
+/* left labels */
+.overlay-left{
+  text-align:left;
+}
+
+/* center values */
+.overlay-center{
+  text-align:left;
+}
+
+/* right description */
+.overlay-right{
+  text-align:left;
+  line-height:1.2;
+}
+
+/* footer */
+.overlay-footer{
+  position:absolute;
+  left:24px;
+  bottom:18px;
+  font-size:12px;
+  opacity:.3;
+}
+
+
+.overlay-bottom{
+  position:absolute;
+  left:20px;
+  right:24px;
+  bottom:16px;
+  line-height:1.1;
+}
+
+
+@media (max-width:800px){
+
+  /* Make overlay grid a positioning context */
+  .overlay-grid{
+    position: absolute;
+    inset: 0;
+    padding: 28px 18px !important;
+    display: block !important;     /* kill the desktop grid on mobile */
+  }
+
+  /* CONTACTS: left labels */
+  .overlay-left{
+    position: absolute;
+    left: 18px;
+    top: 42vh;                    
+    line-height: 1.1; 
+    font-size: 12px;             
+  }
+
+  /* CONTACTS: right values */
+  .overlay-center{
+    position: absolute;
+    right: 18px;
+    top: 42vh;                  
+    text-align: right;
+    line-height: 1.1;          
+    font-size: 12px;  
+  }
+
+  .overlay-center > div{ white-space: nowrap; }
+
+  /* BIO: bottom-left */
+  .overlay-right{
+    position: absolute;
+    left: 18px;
+    bottom: 48px;             
+    line-height: 1.1;
+    text-align: left;
+    font-size: 12px;
+  }
+
+  /* FOOTER: bottom-left */
+  .overlay-footer{
+    position: absolute;
+    left: 18px !important;
+    bottom: 18px !important;
+    font-size: 12px;
+    opacity: .30;
+  }
+}
+
+
+/* IMPORTANT: hard-override browser default link styling inside overlay */
+/* Base underline (hidden) */
+/* Remove any old background-image underline rules first */
+/* === Overlay link box highlight (difference mode) === */
+
+/* === Overlay link filled box (difference mode) === */
+#overlay a,
+#overlay a:visited{
+  position: relative;
+  color: #fff !important;
+  text-decoration: none !important;
+  z-index: 0;
+}
+
+/* Filled box */
+#overlay a::after{
+  content: "";
+  position: absolute;
+  inset: 1px -1.5px;
+  background: #fff;
+  mix-blend-mode: difference;
+  pointer-events: none;
+
+  opacity: 0;                 
+  transform: scaleX(0);     
+  transform-origin: right;
+
+  transition:
+    opacity .12s ease,      
+    transform .25s cubic-bezier(0,-0.03,.28,1)
+}
+
+/* Hover/focus: show + grow from left */
+#overlay.active a:hover::after,
+#overlay.active a:focus-visible::after{
+  opacity: 1;
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+
+
+    /* Preloader */
+    #preloader-overlay{
+      position:fixed; inset:0; width:100%; height:100svh; background:#fff; z-index:1000;
+      opacity:1; pointer-events:none; transition:opacity 1000ms cubic-bezier(.42,0,.58,1);
+    }
+    #preloader{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:2000; mix-blend-mode:difference; }
+    #preloader-icon{ width:20px; height:20px; filter:brightness(0) saturate(100%) invert(1); animation:rotatePreloader 1750ms cubic-bezier(.42,0,.58,1) forwards; }
+    @media (max-width:800px){ #preloader-icon{ width:16px; height:16px; } }
+    @keyframes rotatePreloader{
+      0%{ transform:rotate(0deg) scale(25%); }
+      30%{ transform:rotate(0deg) scale(110%); }
+      100%{ transform:rotate(180deg) scale(110%); }
+    }
+    #preloader-overlay.fade-out{ opacity:0; }
+
+    #bgCanvas{
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  z-index: 1;          /* above the body background */
+  pointer-events: none; /* IMPORTANT: don't block interaction */
+}
+
+.hero-wrap{ z-index: 2; }
+
+html, body{ background:#fff; }
+
+body.menu-open{
+  background:#121212;
+}
+
+
+  </style>
+</head>
+<body>
+
+<h1 class="sr-only">
+  Jens Haugaard — Photographer & Multidisciplinary Creative
+</h1>
+
+
+  <!-- Preloader -->
+  <div id="preloader-overlay">
+    <div id="preloader"><img src="menu.svg" alt="Preloader Icon" id="preloader-icon"/></div>
+  </div>
+
+  <!-- Menu toggle (icon + optional enlarged hit area) -->
+  <img src="menu.svg" id="menuToggle" alt="Open menu">
+  <button id="menuHit" aria-label="Open menu"></button>
+  <span id="menuLabel" aria-hidden="true"></span>
+
+  <!-- Static logo (top right) -->
+   <a href="/" id="logoLink" aria-label="Go to homepage">
+  <img src="LOGO.svg" id="logoStatic" alt="Jens Haugaard logo">
+</a>
+
+
+<div id="bottomLine" aria-hidden="true"></div>
+
+
+
+
+  <!-- Overlay -->
+
+
+  
+  <div id="overlay" aria-hidden="true">
+    <div id="overlay3d" aria-hidden="true"></div>
+
+    <div class="overlay-content overlay-grid">
+
+      
+  <!-- LEFT COLUMN -->
+  <div class="overlay-left">
+    <div>TEL</div>
+    <div>EMAIL</div>
+    <div>INSTAGRAM</div>
+  </div>
+
+<!-- CENTER COLUMN -->
+<div class="overlay-center">
+  <div>
+    <a href="tel:+4553648444">(+45) 53 64 84 44</a>
+  </div>
+  <div>
+    <a href="mailto:hello@jenshaugaard.com">HELLO(AT)JENSHAUGAARD.COM</a>
+  </div>
+  <div>
+    <a href="https://www.instagram.com/jenshaugaaard" target="_blank" rel="noopener">
+      JENSHAUGAAARD
+    </a>
+  </div>
+</div>
+
+<!-- RIGHT COLUMN -->
+<div class="overlay-right">
+  <div>
+    PHOTOGRAPHER AND MULTIDISCIPLINARY<br>
+    CREATIVE EXPLORING VISUAL MEDIUMS.<br>
+    BASED IN COPENHAGEN. CURRENTLY AT
+    <a href="https://www.ducor.dk" target="_blank" rel="noopener">DUCOR</a>
+  </div>
+</div>
+
+
+  <!-- FOOTER -->
+  <div class="overlay-footer">
+    COPYRIGHT 2026 JENS HAUGAARD
+  </div>
+
+</div>
+
+  </div>
+
+  <main>
+
+  <!-- Hero -->
+  <div class="hero-wrap">
+    <img class="hero-layer show" id="heroA" alt="Photography by Jens Haugaard">
+    <img class="hero-layer" id="heroB" alt="Photography by Jens Haugaard">
+  </div>
+
+  <!-- Carousel -->
+  <div class="rail-wrap">
+    <div class="rail" id="rail" aria-label="Work carousel">
+      <div class="track" id="track"></div>
+    </div>
+  </div>
+
+<div class="caption" id="caption" aria-live="polite">
+  <span class="caption-count"></span>
+  <span class="caption-title"></span>
+</div>
+
+</main>
+
+<div id="bgCanvas" aria-hidden="true"></div>
+
+
+  <script>
+  (()=>{
+    "use strict";
+
+    /* =========================
+       DATA
+    ========================= */
+    let images = [
+    
+      {src:"https://ik.imagekit.io/ou0fyxmmi/WORK3.png?updatedAt=1746569168316", title:"Lamin, SKYLL Artwork Photography"},
+      {src:"https://ik.imagekit.io/ou0fyxmmi/WORK_4C2A8077%20(1).jpg?updatedAt=1750228600988", title:"Lamin Press Photography"},
+            {src:"https://ik.imagekit.io/ou0fyxmmi/WORK5.png?updatedAt=1746569166859", title:"Ducor Webdesign"},
+       {src:"https://ik.imagekit.io/ou0fyxmmi/WORK12.png?updatedAt=1746988566466", title:"Campaign Graphics"},
+          {src:"https://ik.imagekit.io/ou0fyxmmi/QURATEExSNKRS_JULY1926.jpg?updatedAt=1760568963291", title:"Quratee x Nike SNKRS Campaign"},
+      {src:"https://ik.imagekit.io/ou0fyxmmi/WORK7.PNG?updatedAt=1746988570168", title:"Lostboys Edit + Graphics"},
+       {src:"https://ik.imagekit.io/ou0fyxmmi/WORK15.JPG?updatedAt=1749794017782", title:"Kundo, 24 Artwork Photography"},
+      {src:"https://ik.imagekit.io/ou0fyxmmi/WORK8.png?updatedAt=1746988565327", title:"Artigeardit & Lamin, NHVEH Artwork Photography"},
+      {src:"https://ik.imagekit.io/ou0fyxmmi/WORK9.png?updatedAt=1746988567337", title:"Lamin, SKYLL Billboard Photography"},
+      {src:"https://ik.imagekit.io/ou0fyxmmi/WORK10.png?updatedAt=1746988566926", title:"RTW Campaign Photography"},
+      {src:"https://ik.imagekit.io/ou0fyxmmi/WORK11.png?updatedAt=1746988567431", title:"Maecor Photography"},
+      {src:"https://ik.imagekit.io/ou0fyxmmi/WORK16.JPG?updatedAt=1749794012884", title:"Noah Carter, Guld & Grønne Artwork Photography"},
+      {src:"https://ik.imagekit.io/ou0fyxmmi/WORK17.JPEG?updatedAt=1749794010883", title:"Campaign Photography"},
+      {src:"https://ik.imagekit.io/ou0fyxmmi/FOREVERLAST_21_070255_LOWRES.jpg?updatedAt=1760568551971", title:"Foreverlast Lookbook Photography"},
+        {src:"https://ik.imagekit.io/ou0fyxmmi/WORK4.png?updatedAt=1746569166583", title:"Artigeardit, Længe Leve Artwork Photography"},
+      {src:"https://ik.imagekit.io/ou0fyxmmi/WORK13.png?updatedAt=1746988567415", title:"Campaign Photography"},
+       {src:"https://ik.imagekit.io/ou0fyxmmi/000027610007_HIGHRES.jpg?updatedAt=1760568443958", title:"Maecor Capsule03"},
+       {src:"https://ik.imagekit.io/ou0fyxmmi/WORK6.png?updatedAt=1746988566457", title:"Maecor Webdesign + Development"},
+       {src:"https://ik.imagekit.io/ou0fyxmmi/WORK1.png?updatedAt=1746569166951", title:"Brand Identity"},
+      {src:"https://ik.imagekit.io/ou0fyxmmi/WORK2.png?updatedAt=1746569168372", title:"Maecor Photography"},
+    ];
+
+    async function loadImagesFromJSON(){
+      try{
+        const r = await fetch('images.json', {cache:'no-store'});
+        if(r.ok){
+          const data = await r.json();
+          if(Array.isArray(data) && data.every(o=>o && o.src)) images = data;
+        }
+      }catch(_){}
+    }
+
+    /* =========================
+       HELPERS
+    ========================= */
+
+    const themeMeta = document.querySelector('meta[name="theme-color"]');
+
+function setSafariThemeColor(hex){
+  if(themeMeta) themeMeta.setAttribute('content', hex);
+}
+
+// iOS Safari sometimes needs a tiny nudge to repaint browser chrome
+function iosThemeNudge(){
+  // Only relevant on small screens (your breakpoint)
+  if(!window.matchMedia('(max-width: 800px)').matches) return;
+
+  // This triggers a UI repaint without a visible scroll
+  requestAnimationFrame(() => {
+    const y = window.scrollY;
+    window.scrollTo(0, y + 1);
+    window.scrollTo(0, y);
+  });
+}
+
+
+
+    const CAN_HAPTIC = typeof navigator !== "undefined" && "vibrate" in navigator;
+
+// tune: keep it super subtle
+const HAPTIC_MS = 6;          // 4–10ms feels “tick”
+const HAPTIC_COOLDOWN = 60;   // ms (prevents buzzing)
+let lastHapticAt = 0;
+
+function hapticTick(){
+  if(!CAN_HAPTIC) return;
+  const now = performance.now();
+  if(now - lastHapticAt < HAPTIC_COOLDOWN) return;
+  lastHapticAt = now;
+  navigator.vibrate(HAPTIC_MS);
+}
+
+    
+    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+    const $ = (sel, root=document)=> root.querySelector(sel);
+
+    function makeThumbUrl(src, width){
+      try{
+        const u = new URL(src);
+        const tr = `tr=w-${Math.max(40, Math.round(width))},q-35`;
+        u.search = u.search ? (u.search + `&${tr}`) : (`?${tr}`);
+        return u.toString();
+      }catch(_){ return src; }
+    }
+    function currentThumbCssWidth(){
+      const cs = getComputedStyle(document.documentElement);
+      return parseFloat(cs.getPropertyValue('--thumb-w')) || 70;
+    }
+
+    /* =========================
+       DOM REFS
+    ========================= */
+    const rail      = $('#rail');
+    const railWrap  = $('.rail-wrap');
+    const track     = $('#track');
+    const heroA     = $('#heroA');
+    const heroB     = $('#heroB');
+    const caption   = $('#caption');
+    const menuIcon  = $('#menuToggle');
+    const menuHit   = $('#menuHit');
+    const overlay   = $('#overlay');
+    const pre       = $('#preloader-overlay');
+
+    // Wiggle the menu icon on hover/focus (works even when hovering the hit area)
+function triggerWiggle(){
+  if(menuIcon.classList.contains('rotated')) return; // don't wiggle when open
+  menuIcon.classList.remove('wiggle'); // restart animation
+  // force reflow so animation re-triggers reliably
+  void menuIcon.offsetWidth;
+  menuIcon.classList.add('wiggle');
+}
+
+function stopWiggleNow(){
+  // remove wiggle class
+  menuIcon.classList.remove('wiggle');
+
+  // hard-cancel any running animation so transform is free
+  menuIcon.style.animation = 'none';
+  void menuIcon.offsetWidth;       // force reflow
+  menuIcon.style.animation = '';    // restore
+}
+
+
+// Hover / pointer
+menuIcon.addEventListener('pointerenter', triggerWiggle);
+menuHit.addEventListener('pointerenter', triggerWiggle);
+
+// Keyboard focus
+menuIcon.addEventListener('focusin', triggerWiggle);
+menuHit.addEventListener('focusin', triggerWiggle);
+
+// Optional: clean up class after animation ends
+menuIcon.addEventListener('animationend', () => {
+  menuIcon.classList.remove('wiggle');
+});
+
+    
+    /* =========================
+       INITIAL HERO
+    ========================= */
+    let frontIsA = true;
+    if(images && images.length){
+      heroA.src = images[0].src;
+      heroA.classList.add('show');
+      const countEl = caption.querySelector('.caption-count');
+const titleEl = caption.querySelector('.caption-title');
+
+countEl.textContent = `1 / ${images.length}`;
+titleEl.textContent = images[0].title || '';
+
+    }
+
+    /* =========================
+       BUILD STRIP
+    ========================= */
+    function buildSet(){
+      const set = document.createElement('div');
+      set.className = 'set';
+      const w = currentThumbCssWidth() * DPR;
+      images.forEach((it, idx)=>{
+        const b = document.createElement('div');
+        b.className = 'thumb';
+        b.setAttribute('role','option');
+        b.setAttribute('aria-label', it.title || `Image ${idx+1}`);
+        b.dataset.index = idx;
+
+        const img = new Image();
+        img.decoding = 'async';
+        img.loading = 'eager';
+        img.draggable = false;
+        img.fetchPriority = 'low';
+        const url1 = makeThumbUrl(it.src, w);
+        const url2 = makeThumbUrl(it.src, w*2);
+        img.src = url1;
+        img.srcset = `${url1} 1x, ${url2} 2x`;
+
+        b.appendChild(img);
+        set.appendChild(b);
+      });
+      return set;
+    }
+
+    let firstSet, secondSet, thirdSet, setWidth = 0;
+function measure(){
+  const r = firstSet.getBoundingClientRect();
+  setWidth = r.width || 0; // keep as float
+}
+
+
+
+    let wrapBase = 0;
+ let midSet = 0;
+let minTx = 0;
+let maxTx = 0;
+
+function buildAllSets(){
+  track.innerHTML = '';
+
+  // Build first set
+  firstSet = buildSet();
+  track.append(firstSet);
+
+  // Measure real set width
+  measure();
+
+  // Build enough sets so you NEVER see an edge
+  // viewport + 2 sets buffer (one on each side)
+ // Build enough sets so we NEVER see an edge (extra safety buffer)
+const SAFETY_SETS = 6; // bigger buffer = no gaps
+const needed = Math.max(7, Math.ceil(innerWidth / setWidth) + SAFETY_SETS);
+
+  for(let i = 1; i < needed; i++){
+    track.append(buildSet());
+  }
+
+  // Start on the middle set
+  midSet = Math.floor(needed / 2);
+  
+
+  // Safe band: allow drifting 1 full set left/right from mid
+  maxTx = -setWidth * (midSet - 1);
+  minTx = -setWidth * (midSet + 1);
+
+  // Start exactly on image 1 (index 0)
+centerOnIndex(0);
+
+updateHero(0);
+
+}
+
+
+
+
+
+    /* =========================
+       HERO SYNC
+    ========================= */
+    let activeIndex = -1;
+    const prefetched = new Set();
+
+    function computeActiveIndex(){
+      const w = (setWidth / images.length) || (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--thumb-w')) || 70);
+      const s = (innerWidth/2 - tx) / w - 0.5;
+      const idx = ((Math.round(s) % images.length) + images.length) % images.length;
+      return idx;
+    }
+
+    const START_OFFSET_PX = 30; // try -2, -4, +2 etc.
+
+function centerOnIndex(i){
+  const thumbW =
+    (setWidth / images.length) ||
+    (parseFloat(getComputedStyle(document.documentElement)
+      .getPropertyValue('--thumb-w')) || 70);
+
+  tx = -(i * thumbW) + innerWidth/2 - thumbW/2 + START_OFFSET_PX;
+
+  wrapTx();
+  applyTransform();
+}
+
+
+
+    async function updateHero(i){
+      if(i === activeIndex) return;
+      activeIndex = i;
+      const item = images[i];
+      if(!item) return;
+
+      const front = frontIsA ? heroA : heroB;
+      const back  = frontIsA ? heroB : heroA;
+
+      const preImg = new Image();
+      preImg.decoding = 'async';
+      preImg.src = item.src;
+      try{ if(preImg.decode) await preImg.decode(); }catch(_){}
+
+      requestAnimationFrame(()=>{
+        back.src = item.src;
+        back.classList.add('show');
+        front.classList.remove('show');
+        frontIsA = !frontIsA;
+      });
+const countEl = caption.querySelector('.caption-count');
+const titleEl = caption.querySelector('.caption-title');
+
+countEl.textContent = `(${i + 1} / ${images.length})`;
+titleEl.textContent = item.title || '';
+
+      
+      const n1 = images[(i+1)%images.length];
+      const p1 = images[(i-1+images.length)%images.length];
+      [n1, p1].forEach(it=>{
+        if(it && !prefetched.has(it.src)){
+          const img=new Image(); img.decoding='async'; img.src=it.src; prefetched.add(it.src);
+        }
+      });
+    }
+
+    /* =========================
+       AUTOPLAY + DRAG/INERTIA
+    ========================= */
+    let lastTime = 0;
+    let tx = 0;
+    const AUTO_SPEED = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--speed')) || 0.045; // px/ms
+    const AUTO_DIR = -1;
+
+    let isDragging = false;
+    let uiLocked = false;
+    let inertial = false;
+    let lastPX = 0;
+    let vel = AUTO_SPEED * AUTO_DIR;
+    let lastMoveTS = 0;
+    let lastHeroCheck = 0;
+    let lastHeroRendered = -1;
+    let dtSmooth = 16.7;
+    let idxStableSince = 0;
+    let currentIdx = -1;
+    const heroIdleInterval = 650;
+    const heroActiveInterval = 80;
+
+    const PIXEL_QUANT = (window.devicePixelRatio && window.devicePixelRatio >= 2) ? 0.5 : 1;
+
+    function applyTransform(){
+      const snapped = Math.round(tx/PIXEL_QUANT)*PIXEL_QUANT;
+      track.style.transform = `translate3d(${snapped}px,0,0)`;
+    }
+    function getComputedTx(){
+      const m = getComputedStyle(track).transform;
+      if(!m || m === 'none') return 0;
+      const parts = m.match(/matrix\(([^)]+)\)/) || m.match(/matrix3d\(([^)]+)\)/);
+      if(!parts) return 0;
+      const nums = parts[1].split(',').map(parseFloat);
+      return (nums.length===6 ? nums[4] : nums[12]) || 0;
+    }
+function wrapTx(){
+  if(setWidth <= 0) return;
+
+  // If we drift too far right (toward 0), jump left by 1 set
+  if(tx > maxTx) tx -= setWidth;
+
+  // If we drift too far left, jump right by 1 set
+  else if(tx < minTx) tx += setWidth;
+}
+
+
+
+    
+
+// Reveal/hide rail on idle (no flicker)
+let hideTimer = null;
+
+function showRail(){
+  if(document.body.classList.contains('menu-open')) return;
+  railWrap.classList.remove('is-hidden');
+}
+
+function scheduleHide(ms){
+  if(document.body.classList.contains('menu-open')) return;
+  if(hideTimer) clearTimeout(hideTimer);
+  hideTimer = setTimeout(()=>{
+    // only hide when user is truly idle
+    if(!isDragging && !inertial && !document.body.classList.contains('menu-open')){
+      railWrap.classList.add('is-hidden');
+    }
+  }, ms);
+}
+
+// =========================
+// Mobile link delay (overlay only)
+// =========================
+const LINK_DELAY_MS = 400;
+
+function isMobileNow() {
+  return window.matchMedia('(max-width: 800px)').matches;
+}
+
+function shouldDelayLink(a, e) {
+  if (!a) return false;
+
+  // only delay links inside the overlay
+  if (!a.closest('#overlay')) return false;
+
+  // ignore new tabs / downloads / modified clicks
+  if (a.target === '_blank' || a.hasAttribute('download')) return false;
+  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return false;
+
+  const href = a.getAttribute('href');
+  if (!href) return false;
+
+  // ignore anchors + special schemes
+  if (href.startsWith('#')) return false;
+  if (href.startsWith('tel:') || href.startsWith('mailto:')) return false;
+
+  return true;
+}
+
+// Use pointerup for better mobile reliability than click
+document.addEventListener(
+  'pointerup',
+  (e) => {
+    if (!isMobileNow()) return;
+
+    const a = e.target.closest('a');
+    if (!shouldDelayLink(a, e)) return;
+
+    const href = a.getAttribute('href');
+
+    // Prevent immediate navigation
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Optional: close overlay instantly so it feels responsive
+    if (overlay?.classList.contains('active')) setMenuState(false);
+
+    setTimeout(() => {
+      window.location.assign(href);
+    }, LINK_DELAY_MS);
+  },
+  { capture: true }
+);
+
+
+
+    // Pointer handlers
+    function startDrag(e){
+      if(uiLocked) { e?.preventDefault?.(); return; }
+      if(e.isPrimary === false) return;
+      tx = getComputedTx();
+      showRail();
+      document.body.classList.add('dragging');
+      isDragging = true; inertial = false;
+      lastPX = e.clientX; lastMoveTS = performance.now();
+      if(hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+      e.preventDefault();
+    }
+    function moveDrag(e){
+      if(uiLocked || !isDragging) return;
+      const now = performance.now();
+      const dx = e.clientX - lastPX;
+      tx += dx; wrapTx(); applyTransform();
+      const dt = now - lastMoveTS;
+      if(dt > 0) vel = dx / dt;
+      lastPX = e.clientX; lastMoveTS = now;
+      e.preventDefault();
+    }
+    function endDrag(e){
+      if(uiLocked || !isDragging) return;
+      isDragging = false; inertial = true; lastTime = performance.now();
+      document.body.classList.remove('dragging');
+      if(e) e.preventDefault();
+      scheduleHide(5000);
+    }
+
+    document.addEventListener('pointerdown', startDrag, {passive:false});
+    document.addEventListener('pointermove', moveDrag, {passive:false});
+    document.addEventListener('pointerup', endDrag, {passive:false});
+    document.addEventListener('pointercancel', endDrag, {passive:false});
+    document.addEventListener('pointerleave', endDrag, {passive:false});
+
+    rail.addEventListener('mouseenter', ()=>{
+      railWrap.classList.remove('is-hidden');
+      if(hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+    });
+    rail.addEventListener('mouseleave', ()=>{
+      if(!isDragging) scheduleHide(5000);
+    });
+
+    function step(ts){
+  const now = ts || performance.now();
+  if(lastTime === 0) lastTime = now;
+  const rawDt = now - lastTime;
+  dtSmooth = dtSmooth * 0.95 + rawDt * 0.05;
+  const dt = dtSmooth;
+
+  const MAX_SPEED = 2; // px per ms (tweak)
+
+  const clamp = (v, max) => Math.max(-max, Math.min(max, v));
+
+  if(isDragging){
+    // position updated in moveDrag
+  } else if(inertial){
+    const target = AUTO_SPEED * AUTO_DIR;
+    const alpha = 1 - Math.exp(-dt/250);
+    vel += (target - vel) * alpha;
+
+    vel = clamp(vel, MAX_SPEED);         
+    tx += vel * dt; wrapTx(); applyTransform();
+
+    if(Math.abs(vel - target) < 0.0008){
+      inertial = false;
+      vel = target;
+    }
+  } else {
+    vel = AUTO_SPEED * AUTO_DIR;
+
+    vel = clamp(vel, MAX_SPEED);       
+    tx += vel * dt; wrapTx(); applyTransform();
+  }
+
+      const idx = computeActiveIndex();
+      const w = (setWidth / images.length) || (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--thumb-w')) || 70);
+      const fastThreshold = w / 250;
+      const isFast = Math.abs(vel) > fastThreshold;
+
+      if(idx !== currentIdx){ currentIdx = idx; idxStableSince = now; }
+
+      if(isFast || (lastHeroRendered !== -1 && Math.abs(currentIdx - lastHeroRendered) >= 1)){
+        if(currentIdx !== lastHeroRendered){
+        updateHero(currentIdx);
+        lastHeroRendered = currentIdx;
+
+        if(isDragging) hapticTick();
+
+          lastHeroCheck = now;
+        }
+      } else {
+        const interval = (isDragging || inertial) ? heroActiveInterval : heroIdleInterval;
+        if(now - lastHeroCheck > interval && now - idxStableSince > 80 && currentIdx !== lastHeroRendered){
+          updateHero(currentIdx);
+          lastHeroRendered = currentIdx;
+
+        if(isDragging) hapticTick();
+
+          lastHeroCheck = now;
+        }
+      }
+
+      lastTime = now;
+      requestAnimationFrame(step);
+
+    }
+
+
+// Desktop vertical scroll → horizontal carousel motion
+const isDesktop = window.matchMedia('(pointer: fine)').matches;
+
+if(isDesktop){
+  window.addEventListener('wheel', onWheel, { passive:false });
+}
+
+function onWheel(e){
+  // ignore when menu open
+  if(uiLocked) return;
+
+  e.preventDefault();
+
+  // convert vertical scroll into horizontal movement
+  const delta = e.deltaY || e.deltaX || 0;
+
+  // tune this value for feel
+  const SCROLL_MULT = 0.007;
+
+  // inject velocity instead of hard position jump (smooth!)
+  vel += -delta * SCROLL_MULT * 0.1;
+
+  // clamp so it never explodes
+  const MAX_SCROLL_VEL = 1.5;
+  vel = Math.max(-MAX_SCROLL_VEL, Math.min(MAX_SCROLL_VEL, vel));
+
+  inertial = true;
+  showRail();
+  if(hideTimer){ clearTimeout(hideTimer); hideTimer = null; }
+}
+
+function resetAnimationClock(){
+  lastTime = 0;       // forces step() to treat next frame as fresh
+  dtSmooth = 1.5;    // reset smoothing baseline
+}
+
+
+
+    /* =========================
+       MENU + PRELOADER
+    ========================= */
+    function hidePreloader(){
+      if(!pre || pre.dataset.hidden) return;
+      pre.classList.add('fade-out');
+      pre.dataset.hidden = "1";
+      setTimeout(()=>{ pre.style.display='none'; }, 1200);
+    }
+    window.addEventListener('load', ()=> setTimeout(hidePreloader, 600));
+    document.addEventListener('DOMContentLoaded', ()=> setTimeout(hidePreloader, 1800));
+    setTimeout(hidePreloader, 4000);
+
+    function setMenuState(open){
+  overlay.classList.toggle('active', open);
+  document.body.classList.toggle('menu-open', open);
+  menuIcon.classList.toggle('rotated', open);
+  uiLocked = !!open;
+
+  if(window.matchMedia('(max-width: 800px)').matches){
+    setSafariThemeColor(open ? '#121212' : '#ffffff');
+    iosThemeNudge();
+  }
+
+  overlay.setAttribute('aria-hidden', open ? 'false' : 'true');
+}
+
+
+    function toggleMenu(e){
+  e?.stopPropagation?.();
+  e?.preventDefault?.();
+
+  stopWiggleNow(); 
+
+  const open = !overlay.classList.contains('active');
+  setMenuState(open);
+}
+
+
+    // Bind menu interactions (icon + enlarged hit area)
+    ['click'].forEach(evt=>{
+      menuIcon.addEventListener(evt, toggleMenu, {passive:false});
+      menuHit.addEventListener(evt, toggleMenu, {passive:false});
+    });
+  
+
+    // Hide rail instantly on press to avoid brief flash before overlay
+    const hideRailInstant = (e)=>{
+      e.stopPropagation();
+      try{ if(hideTimer){ clearTimeout(hideTimer); hideTimer=null; } }catch(_){}
+      railWrap.classList.add('is-hidden');
+    };
+    ['pointerdown','touchstart','mousedown'].forEach(evt=>{
+      menuIcon.addEventListener(evt, hideRailInstant, {passive:true});
+      menuHit .addEventListener(evt, hideRailInstant, {passive:true});
+    });
+
+    // Disable vertical page scrolling (when menu closed)
+    const scrollBlock = (e)=>{ if(!document.body.classList.contains('menu-open')) e.preventDefault(); };
+    window.addEventListener('touchmove', scrollBlock, {passive:false});
+    window.addEventListener('wheel', scrollBlock, {passive:false});
+
+  function resync(){
+  measure();
+  wrapTx();
+  applyTransform();
+  updateHero(computeActiveIndex());
+}
+
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'visible'){
+    resetAnimationClock();
+    resync();
+  }
+}, {passive:true});
+
+window.addEventListener('focus', ()=>{
+  resetAnimationClock();
+  resync();
+}, {passive:true});
+
+window.addEventListener('pageshow', ()=>{
+  resetAnimationClock();
+  resync();
+}, {passive:true});
+
+
+
+    /* =========================
+       BOOT
+    ========================= */
+    /* =========================
+   BOOT (no flicker, true infinite feel)
+========================= */
+
+function waitThumbsReady(){
+  const imgs = track.querySelectorAll('.thumb img');
+  const ps = [...imgs].map(img => {
+    if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+    if (img.decode) return img.decode().catch(()=>{});
+    return new Promise(res=>{
+      img.addEventListener('load', res, {once:true});
+      img.addEventListener('error', res, {once:true});
+    });
+  });
+
+  return Promise.all(ps).then(() => new Promise(res=>{
+    requestAnimationFrame(()=> requestAnimationFrame(res));
+  }));
+}
+
+
+async function boot(){
+  railWrap.classList.remove('is-ready');
+
+  // Load images.json first (CMS source). If it fails, keep inline fallback.
+  try{
+    const r = await fetch('images.json', {cache:'no-store'});
+    if(r.ok){
+      const data = await r.json();
+      if(data && Array.isArray(data.images) && data.images.every(o=>o && o.src)){
+  images = data.images;
+}
+
+    }
+  }catch(_){}
+
+  // Now build from whichever images we have
+  buildAllSets();
+
+  await waitThumbsReady();
+  railWrap.classList.add('is-ready');
+
+  requestAnimationFrame(step);
+}
+
+document.addEventListener('DOMContentLoaded', boot);
+
+
+document.addEventListener('DOMContentLoaded', boot);
+
+
+
+
+  })();
+  </script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Jens Haugaard",
+  "url": "https://www.jenshaugaard.com",
+  "image": "https://www.jenshaugaard.com/og.jpg",
+  "jobTitle": "Photographer",
+  "worksFor": {
+    "@type": "Organization",
+    "name": "DUCOR"
+  },
+  "sameAs": [
+    "https://www.instagram.com/jenshaugaaard"
+  ],
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Copenhagen",
+    "addressCountry": "DK"
+  }
+}
+</script>
+
+
+
+</body>
+</html>
