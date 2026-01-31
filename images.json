@@ -1,5 +1,8 @@
 {
   "images": [
-    { "src": "https://...", "title": "..." }
+    {
+      "src": "assets/uploads/frame-43.png",
+      "title": "TEST ZANKA"
+    }
   ]
 }
